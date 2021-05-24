@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Autofac;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -59,9 +60,25 @@ namespace SampleDI
     {
         static void Main(string[] args)
         {
-            var log = new ConsoleLog();
-            var engine = new Engine(log);
-            var car = new Car(engine, log);
+            var builder = new ContainerBuilder();
+            builder.RegisterType<ConsoleLog>().As<ILog>();
+            // builder.RegisterType<ConsoleLog>().As<ILog>(); // (A)
+            builder.RegisterType<ConsoleLog>().As<ILog>().AsSelf();
+
+            builder.RegisterType<Engine>();
+            builder.RegisterType<Car>();
+
+            IContainer container = builder.Build();
+
+            var car = container.Resolve<Car>();
+
+            // (A) If we need to resolve or get the object for console log as below, we need to call AsSelf() while register type
+            var logObj = container.Resolve<ConsoleLog>();
+
+            //Below is for without DI.
+            //var log = new ConsoleLog();
+            //var engine = new Engine(log);
+            //var car = new Car(engine, log);
             car.GoForward();
 
             Console.ReadKey();
