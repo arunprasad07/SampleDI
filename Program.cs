@@ -15,11 +15,23 @@ namespace SampleDI
     {
         void write(string message);
     }
+    interface IConsole
+    {
+
+    }
     class ConsoleLog : ILog
     {
         public void write(string message)
         {
             Console.WriteLine(message);
+        }
+    }
+    class EmailLog : ILog, IConsole //(B) Mutliple interfaces
+    {
+        private string email = "admin@foo.com";
+        public void write(string message)
+        {
+            Console.WriteLine($"Email sent to {email}: {message}");
         }
     }
     class Car
@@ -61,9 +73,15 @@ namespace SampleDI
         static void Main(string[] args)
         {
             var builder = new ContainerBuilder();
-            builder.RegisterType<ConsoleLog>().As<ILog>();
-            // builder.RegisterType<ConsoleLog>().As<ILog>(); // (A)
-            builder.RegisterType<ConsoleLog>().As<ILog>().AsSelf();
+            //builder.RegisterType<ConsoleLog>().As<ILog>();
+            //builder.RegisterType<ConsoleLog>().As<ILog>().AsSelf();// (A)
+
+            // (B) In order register for multiple interface chain AS()
+            builder.RegisterType<EmailLog>()
+                .As<IConsole>()
+                .As<ILog>();
+            builder.RegisterType<ConsoleLog>().As<ILog>().PreserveExistingDefaults();
+
 
             builder.RegisterType<Engine>();
             builder.RegisterType<Car>();
@@ -73,7 +91,7 @@ namespace SampleDI
             var car = container.Resolve<Car>();
 
             // (A) If we need to resolve or get the object for console log as below, we need to call AsSelf() while register type
-            var logObj = container.Resolve<ConsoleLog>();
+            //var logObj = container.Resolve<ConsoleLog>();
 
             //Below is for without DI.
             //var log = new ConsoleLog();
